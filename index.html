@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Pubads</title>
+		<meta name="author" content="squee">
+		
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<script> src="js/baidutongji.js"</script>
+		<script src="js/delayed.js"></script>
+		<script src="js/utils.js"></script>
+		<script src="js/timer.js"></script>
+		<script src="js/log.js"></script>
+		<script src="js/wallpaper.js"></script>
+		<style type="text/css">
+			html, body {	overflow: hidden; width: 100%; height: 100%; background: black; }
+			canvas { position: absolute; top: 0; left: 0;  }
+
+			#cpu-warning {
+				position: fixed; top: 10; left: 0; right: 0;
+				text-align: left;
+				background: black;
+				color: white;
+				font-family: sans-serif;
+				font-weight: bold;
+				padding: 20px 20px 20px 100px;
+				display: none;
+				
+			}
+			#cpu-warning h3 {
+				color: red;
+			}
+		</style> 
+	</head>
+	<body>
+		<canvas id="canvas"></canvas>	
+		<div id="cpu-warning"><h3>Possible heavy CPU usage!!</h3>Please check taskmanager and if needed turn down settings and or framerate<br>&nbsp;&nbsp;or<br>Disable this warning at the bottom of settings.</div>
+			
+		
+		<script type="text/javascript">
+			"use strict";
+			
+			var particleCountFactor = 0.5;
+			
+			var spawnConfigRain = [
+				[/* spawn count */20, 
+				 /* type */3, 
+				 /* cook */0, 1, 
+				 /* lifetime */1, 1,
+				 /* x/y correction */ 0, -0.5,  
+				 /* xspawn */ 1, 80, 
+				 /* yspawn */ 1, 80, 
+				 /* xdir */ 0, 0, 
+				 /* ydir */ 0, 0 ],
+				 
+				[/* spawn count */10, 
+				 /* type */3, 
+				 /* cook */0, 1, 
+				 /* lifetime */1, 1,
+				 /* x/y correction */ 0, -0.5, 
+				 /* xspawn */ 1, 80, 
+				 /* yspawn */ 1, 80, 
+				 /* xdir */ 0, 0, 
+				 /* ydir */ 0, 0 ]
+			];
+			
+			var spawnConfigRain2 = [
+				[
+					[/* spawn count */10, 
+					 /* type */3, 
+					 /* cook */0, 1, 
+					 /* lifetime */1, 1,
+					 /* x/y correction */ 0, -0.5,  
+					 /* xspawn */ 1, 80, 
+					 /* yspawn */ 1, 80, 
+					 /* xdir */ 0, 0, 
+					 /* ydir */ 0, 0 ],
+					[/* spawn count */10, 
+					 /* type */3, 
+					 /* cook */3, 1, 
+					 /* lifetime */1, 1,
+					 /* x/y correction */ 0, -0.5,  
+					 /* xspawn */ 1, 80, 
+					 /* yspawn */ 1, 80, 
+					 /* xdir */ 0, 0, 
+					 /* ydir */ 0, 0 ],
+				],
+				 
+				[/* spawn count */10, 
+				 /* type */3, 
+				 /* cook */0, 1, 
+				 /* lifetime */1, 1,
+				 /* x/y correction */ 0, -0.5, 
+				 /* xspawn */ 1, 80, 
+				 /* yspawn */ 1, 80, 
+				 /* xdir */ 0, 0, 
+				 /* ydir */ 0, 0 ]
+			];
+			
+			var spawnConfigBlast = [
+				[/* spawn count */100, 
+				 /* type */3, 
+				 /* cook */0, 0.5, 
+				 /* lifetime */0.5,0.5,
+				 /* x/y correction */ 0, -0.5, 
+				 /* xspawn */ 1, 20, 
+				 /* yspawn */ 1, 20, 
+				 /* xdir */ 0, 0, 
+				 /* ydir */ 0, 0 ]
+			];
+			
+			var spawnConfigCircle = [
+				[/* spawn count */50, 
+				 /* type */3, 
+				 /* cook */0, 0, 
+				 /* lifetime */2,2,
+				 /* x/y correction */ 0, -0.5, 
+				 /* xspawn */ 0, 0, 
+				 /* yspawn */ 0, 0, 
+				 /* xdir */ 20, 2, 
+				 /* ydir */ 20, 2 ]
+			];
+			
+			var spawnConfigCircle2Color = [[
+				[/* spawn count */25, 
+				 /* type */3, 
+				 /* cook */0, 0, 
+				 /* lifetime */2,2,
+				 /* x/y correction */ 0, -0.5, 
+				 /* xspawn */ 0, 0, 
+				 /* yspawn */ 0, 0, 
+				 /* xdir */ 20, 2, 
+				 /* ydir */ 20, 2 ],
+				[/* spawn count */25, 
+				 /* type */3, 
+				 /* cook */0, 0, 
+				 /* lifetime */2,2,
+				 /* x/y correction */ 0, -0.5, 
+				 /* xspawn */ 0, 0, 
+				 /* yspawn */ 0, 0, 
+				 /* xdir */ 20, 2, 
+				 /* ydir */ 20, 2 ]
+			]];
+			
+			var spawnConfigFlower = [
+				[/* spawn count */50, 
+				 /* type */3, 
+				 /* cook */0, 0, 
+				 /* lifetime */1,4,
+				 /* x/y correction */ 0, -0.75, 
+				 /* xspawn */ 0, 0, 
+				 /* yspawn */ 0, 0, 
+				 /* xdir */ 0, 30, 
+				 /* ydir */ 0, 30 ]
+			];
+			
+			var spawnConfigFlower2Color = [[
+				[/* spawn count */25, 
+				 /* type */3, 
+				 /* cook */0, 0, 
+				 /* lifetime */1,4,
+				 /* x/y correction */ -0.8, -0.75, 
+				 /* xspawn */ 0, 0, 
+				 /* yspawn */ 0, 0, 
+				 /* xdir */ 0, 30, 
+				 /* ydir */ 0, 30 ],
+				[/* spawn count */25, 
+				 /* type */3, 
+				 /* cook */0, 0, 
+				 /* lifetime */1,4,
+				 /* x/y correction */ 0.8, -0.75, 
+				 /* xspawn */ 0, 0, 
+				 /* yspawn */ 0, 0, 
+				 /* xdir */ 0, 30, 
+				 /* ydir */ 0, 30 ]
+			]];
+			
+//			
+//			var spawnConfigCircle = [
+//				[/* spawn count */50, 
+//				 /* type */3, 
+//				 /* cook */0, 0, 
+//				 /* lifetime */2, 0,
+//				 /* x/y correction */ 0, -0.5, 
+//				 /* xspawn */ 20, 0, 
+//				 /* yspawn */ 10, 0, 
+//				 /* xdir */ 40, 0, 
+//				 /* ydir */ 20, 0 ]
+//			];
+//			
+//			var spawnConfigUp = [
+//				[/* spawn count */40, 
+//				 /* type */3, 
+//				 /* cook */0, 0, 
+//				 /* lifetime */1, 1,
+//				 /* x/y correction */ 0, -2, 
+//				 /* xspawn */ 0, 0, 
+//				 /* yspawn */ 0, 0, 
+//				 /* xdir */ 20, 0, 
+//				 /* ydir */ 20, 20 ]
+//			];
+//			
+			var spawnConfigCombo = [
+				[
+					[/* spawn count */30, 
+					 /* type */3, 
+					 /* cook */0, 0, 
+					 /* lifetime */1, 1,
+					 /* x/y correction */ 0, -2, 
+					 /* xspawn */ 0, 0, 
+					 /* yspawn */ 0, 0, 
+					 /* xdir */ 0, 20, 
+					 /* ydir */ 5, 20 ],
+					[/* spawn count */20, 
+					 /* type */3, 
+					 /* cook */0, 0, 
+					 /* lifetime */1, 1,
+					 /* x/y correction */ 0, -0.25, 
+					 /* xspawn */ 10, 10, 
+					 /* yspawn */ 5, 5, 
+					 /* xdir */ 20, 1, 
+					 /* ydir */ 10, 1 ]
+				]
+			];
+			
+			var symbolData = {
+				'A': [
+					[0,1,1,1,0],
+					[1,0,0,0,1],
+					[1,1,1,1,1],
+					[1,0,0,0,1],
+					[1,0,0,0,1],
+				],
+				'B': [
+					[1,1,1,1,0],
+					[1,0,0,0,1],
+					[1,1,1,1,0],
+					[1,0,0,0,1],
+					[1,1,1,1,0],
+				],
+				'C': [
+					[0,1,1,1,0],
+					[1,0,0,0,1],
+					[1,0,0,0,0],
+					[1,0,0,0,1],
+					[0,1,1,1,0],
+				],
+				'D': [
+					[1,1,1,1,0],
+					[1,0,0,0,1],
+					[1,0,0,0,1],
+					[1,0,0,0,1],
+					[1,1,1,1,0],
+				],
+				'E': [
+					[1,1,1,1,1],
+					[1,0,0,0,0],
+					[1,1,1,1,0],
+					[1,0,0,0,0],
+					[1,1,1,1,1],
+				],
+				'F': [
+					[1,1,1,1,1],
+					[1,0,0,0,0],
+					[1,1,1,1,0],
+					[1,0,0,0,0],
+					[1,0,0,0,0],
+				],
+				'G': [
+					[0,1,1,1,1],
+					[1,0,0,0,0],
+					[1,0,0,1,1],
+					[1,0,0,0,1],
+					[0,1,1,1,0],
+				],
+				'H': [
+					[1,0,0,0,1],
+					[1,0,0,0,1],
+					[1,1,1,1,1],
+					[1,0,0,0,1],
+					[1,0,0,0,1],
+				],
+				'I': [
+					[1,1,1,1,1],
+					[0,0,1,0,0],
+					[0,0,1,0,0],
+					[0,0,1,0,0],
+					[1,1,1,1,1],
+				],
+				'J': [
+					[0,0,1,1,1],
+					[0,0,0,1,0],
+					[0,0,0,1,0],
+					[1,0,0,1,0],
+					[0,1,1,0,0],
+				],
+				'K': [
+					[1,0,0,1,0],
+					[1,0,1,0,0],
+					[1,1,0,0,0],
+					[1,0,1,0,0],
+					[1,0,0,1,0],
+				],
+				'L': [
+					[1,0,0,0,0],
+					[1,0,0,0,0],
+					[1,0,0,0,0],
+					[1,0,0,0,0],
+					[1,1,1,1,0],
+				],
+				'M': [
+					[1,0,0,0,1],
+					[1,1,0,1,1],
+					[1,0,1,0,1],
+					[1,0,0,0,1],
+					[1,0,0,0,1],
+				],
+				'N': [
+					[1,0,0,0,1],
+					[1,1,0,0,1],
+					[1,0,1,0,1],
+					[1,0,0,1,1],
+					[1,0,0,0,1],
+				],
+				'O': [
+					[0,1,1,1,0],
+					[1,0,0,0,1],
+					[1,0,0,0,1],
+					[1,0,0,0,1],
+					[0,1,1,1,0],
+				],
+				'P': [
+					[1,1,1,1,0],
+					[1,0,0,0,1],
+					[1,1,1,1,0],
+					[1,0,0,0,0],
+					[1,0,0,0,0],
+				],
+				'Q': [
+					[0,1,1,1,0],
+					[1,0,0,0,1],
+					[1,0,0,0,1],
+					[1,0,0,1,0],
+					[0,1,1,0,1],
+				],
+				'R': [
+					[1,1,1,1,0],
+					[1,0,0,0,1],
+					[1,1,1,1,0],
+					[1,0,0,0,1],
+					[1,0,0,0,1],
+				],
+				'S': [
+					[0,1,1,1,1],
+					[1,0,0,0,0],
+					[0,1,1,1,0],
+					[0,0,0,0,1],
+					[1,1,1,1,0],
+				],
+				'T': [
+					[1,1,1,1,1],
+					[0,0,1,0,0],
+					[0,0,1,0,0],
+					[0,0,1,0,0],
+					[0,0,1,0,0],
+				],
+				'U': [
+					[1,0,0,0,1],
+					[1,0,0,0,1],
+					[1,0,0,0,1],
+					[1,0,0,0,1],
+					[0,1,1,1,0],
+				],
+				'V': [
+					[1,0,0,0,1],
+					[1,0,0,0,1],
+					[1,0,0,0,1],
+					[0,1,0,1,0],
+					[0,0,1,0,0],
+				],
+				'W': [
+					[1,0,0,0,1],
+					[1,0,0,0,1],
+					[1,0,1,0,1],
+					[1,0,1,0,1],
+					[0,1,0,1,0],
+				],
+				'X': [
+					[1,0,0,0,1],
+					[0,1,0,1,0],
+					[0,0,1,0,0],
+					[0,1,0,1,0],
+					[1,0,0,0,1],
+				],
+				'Y': [
+					[1,0,0,0,1],
+					[0,1,0,1,0],
+					[0,0,1,0,0],
+					[0,0,1,0,0],
+					[0,0,1,0,0],
+				],
+				'Z': [
+					[1,1,1,1,1],
+					[0,0,0,1,0],
+					[0,0,1,0,0],
+					[0,1,0,0,0],
+					[1,1,1,1,1],
+				],
+				'0': [
+					[0,1,1,1,0],
+					[1,0,0,1,1],
+					[1,0,1,0,1],
+					[1,1,0,0,1],
+					[0,1,1,1,0],
+				],
+				'1': [
+					[0,0,1,0,0],
+					[0,1,1,0,0],
+					[0,0,1,0,0],
+					[0,0,1,0,0],
+					[0,0,1,0,0],
+				],
+				'2': [
+					[1,1,1,1,0],
+					[0,0,0,0,1],
+					[1,1,1,1,0],
+					[1,0,0,0,0],
+					[1,1,1,1,1],
+				],
+				'3': [
+					[1,1,1,1,0],
+					[0,0,0,0,1],
+					[0,0,1,1,0],
+					[0,0,0,0,1],
+					[1,1,1,1,0],
+				],
+				'4': [
+					[1,0,0,1,0],
+					[1,0,0,1,0],
+					[1,1,1,1,1],
+					[0,0,0,1,0],
+					[0,0,0,1,0],
+				],
+				'5': [
+					[1,1,1,1,1],
+					[1,0,0,0,0],
+					[1,1,1,1,0],
+					[0,0,0,0,1],
+					[1,1,1,1,0],
+				],
+				'6': [
+					[0,1,1,1,0],
+					[1,0,0,0,0],
+					[1,1,1,1,0],
+					[1,0,0,0,1],
+					[0,1,1,1,0],
+				],
+				'7': [
+					[1,1,1,1,1],
+					[0,0,0,1,0],
+					[0,0,1,0,0],
+					[0,1,0,0,0],
+					[1,0,0,0,0],
+				],
+				'8': [
+					[0,1,1,1,0],
+					[1,0,0,0,1],
+					[0,1,1,1,0],
+					[1,0,0,0,1],
+					[0,1,1,1,0],
+				],
+				'9': [
+					[0,1,1,1,0],
+					[1,0,0,0,1],
+					[0,1,1,1,1],
+					[0,0,0,0,1],
+					[0,1,1,1,0],
+				],
+				'-': [
+					[0,0,0,0,0],
+					[0,0,0,0,0],
+					[0,1,1,1,0],
+					[0,0,0,0,0],
+					[0,0,0,0,0],
+				],
+				'+': [
+					[0,0,0,0,0],
+					[0,0,1,0,0],
+					[0,1,1,1,0],
+					[0,0,1,0,0],
+					[0,0,0,0,0],
+				],
+				'!': [
+					[0,0,1,0,0],
+					[0,0,1,0,0],
+					[0,0,1,0,0],
+					[0,0,0,0,0],
+					[0,0,1,0,0],
+				],
+				'?': [
+					[0,1,1,1,0],
+					[0,0,0,0,1],
+					[0,0,1,1,0],
+					[0,0,0,0,0],
+					[0,0,1,0,0],
+				]
+			};
+			
+			var symbols = {}; 
+			for( var sym in symbolData ) {
+				var dt = [];
+				var hs = 10;
+				var vs = 10;
+				var sx = -2 * hs;
+				var sy = -2 * vs;
+				for( var j = 0; j < symbolData[sym].length; j++)
+				{
+					for( var i = 0; i < symbolData[sym][j].length; i ++)
+					{
+						if( symbolData[sym][ j ][ i ] === 1 ) {
+							var x = sx + i * hs;
+							var y = sy + j * vs;
+							dt[ dt.length ] = [/* spawn count */1, /* type */2, /* cook */0, 0, /* lifetime */0.1, 0,/* x/y correction */ 0, 0, /* xspawn */ x, 0, /* yspawn */ y, 0, /* xdir */ 0, 0, /* ydir */ 0, 0 ];
+						}
+					}
+				}
+				symbols[sym] = [
+					dt,
+					[/* spawn count */5, 
+					 /* type */3, 
+					 /* cook */0, 0, 
+					 /* lifetime */3, 1,
+					 /* x/y correction */ 0, 0, 
+					 /* xspawn */ 0, 8, 
+					 /* yspawn */ 0, 5, 
+					 /* xdir */ 0, 0, 
+					 /* ydir  */ 0, 0 ] 
+				];
+			}		
+			
+			function p( x, y, fx, fy, ax, ay, at, c, cookTime, lifeTime, subSpawns, useSubSpawn )
+			{
+				this.ox = x;// prev x
+				this.oy = y;
+				this.x = x; // current x
+				this.y = y;
+				this.fx = fx; // current force
+				this.fy = fy;
+				this.ax = ax; // direction
+				this.ay = ay;
+				
+				this.bx = Math.random() - 0.5;
+				this.bx = Math.pow( this.bx, 4 ) * 100 * ( this.bx < 0 ? -1 : 1 );
+				this.by = (Math.pow( 1-Math.random()%1, 4 ) ) * 100;
+				this.cookTimeAdjust = (Math.pow( Math.random(), 2 )) * 2.000;
+				this.lifeTimeAdjust = (Math.pow( Math.random(), 2 )) * 0.100;
+				
+				this.accTime = at;
+				this.c = c;
+				if( typeof this.c !== 'object' ) this.c = [ this.c ];
+				
+				this.state = 0;
+				this.maxLifeTime = lifeTime;
+				this.cookTime = cookTime + 0.5;
+				this.lifeTime = lifeTime;
+				
+				
+				this.subSpawns = subSpawns;
+				this.currentSubSpawn = typeof useSubSpawn === 'undefined' ? 0 : useSubSpawn;
+				this.particles = [];
+				
+				this.subspawn = function()
+				{
+					if( !this.subSpawns || this.currentSubSpawn >= this.subSpawns.length ) return;
+					
+					var subSpawn = this.subSpawns[ this.currentSubSpawn ];
+					
+					var l = 1;
+					if( typeof subSpawn[ 0 ] === 'object' ) l = subSpawn.length;
+					else subSpawn = [ subSpawn ];
+						
+					var cl = this.c;
+					if( typeof cl !== 'object' ) cl = [ cl ];
+						
+						
+					for( var j = 0; j < l; j++ ) {
+						var c = cl[ j % cl.length ];//j == 0 ? this.c : 'hsl('+Math.floor( 0 + Math.random()*360 )+',100%,55%)';
+						var subSpawn2 = subSpawn[ j ];
+						var spawnCount = subSpawn2[ 0 ] * particleCountFactor;
+						var spawnType = subSpawn2[ 1 ];
+						
+						var minCook = subSpawn2[ 2 ];
+						var rndCook = subSpawn2[ 3 ];
+						var minLifetime = subSpawn2[ 4 ];
+						var rndLifetime = subSpawn2[ 5 ];
+						
+						var xCorr = subSpawn2[ 6 ];
+						var yCorr = subSpawn2[ 7 ];
+						
+						var minXSpawnSpread = subSpawn2[ 8 ];
+						var rndXSpawnSpread = subSpawn2[ 9 ];
+						var minYSpawnSpread = subSpawn2[ 10 ];
+						var rndYSpawnSpread = subSpawn2[ 11 ];
+						
+						var minXDirSpread = subSpawn2[ 12 ];
+						var rndXDirSpread = subSpawn2[ 13 ];
+						var minYDirSpread = subSpawn2[ 14 ];
+						var rndYDirSpread = subSpawn2[ 15 ];
+						
+						
+						var i, r, x, y;
+						
+						switch( spawnType ) {
+							case 3:
+								for( i = 0; i < spawnCount; i++ ) {
+									r = Math.random() * 2 * Math.PI;
+									x = Math.sin(r) + xCorr;
+									y = Math.cos(r) + yCorr;
+									this.particles[this.particles.length] = new p(  this.x + x * (minXSpawnSpread + Math.random() * rndXSpawnSpread), 
+																					this.y + y * (minYSpawnSpread + Math.random() * rndYSpawnSpread), 
+																					x * (minXDirSpread + Math.random() * rndXDirSpread), 
+																					y * (minYDirSpread + Math.random() * rndYDirSpread),
+																					0, 0,
+																					0,
+																					c, 
+																					minCook + Math.random() * rndCook, 
+																					minLifetime + Math.random() * rndLifetime, 
+																					this.subSpawns,
+																					this.currentSubSpawn + 1 );
+								}
+								break;
+							case 2:
+								for( i = 0; i < spawnCount; i++ ) {
+									r = Math.random() * 2 * Math.PI;
+									x = 0;//Math.sin(r) + xCorr;
+									y = 0;//Math.cos(r) + yCorr;
+									this.particles[this.particles.length] = new p(  this.x + (minXSpawnSpread + Math.random() * rndXSpawnSpread), 
+																					this.y + (minYSpawnSpread + Math.random() * rndYSpawnSpread), 
+																					x * (minXDirSpread + Math.random() * rndXDirSpread), 
+																					y * (minYDirSpread + Math.random() * rndYDirSpread),
+																					0, 0,
+																					0,
+																					c, 
+																					minCook + Math.random() * rndCook, 
+																					minLifetime + Math.random() * rndLifetime, 
+																					this.subSpawns,
+																					this.currentSubSpawn + 1 );
+								}
+								break;
+							case 1:
+								for( i = 0; i < spawnCount; i++ ) {
+									r = Math.random() * 2 * Math.PI;
+									x = Math.sin(r) + xCorr;
+									y = Math.cos(r) + yCorr;
+									this.particles[this.particles.length] = new p(  this.x + x * (minXSpawnSpread + Math.random() * rndXSpawnSpread), 
+																					this.y + y * (minYSpawnSpread + Math.random() * rndYSpawnSpread), 
+																					x * (minXDirSpread + Math.random() * rndXDirSpread), 
+																					y * (minYDirSpread + Math.random() * rndYDirSpread),
+																					0, 0,
+																					0,
+																					c, 
+																					minCook + Math.random() * rndCook, 
+																					minLifetime + Math.random() * rndLifetime, 
+																					this.subSpawns,
+																					this.currentSubSpawn + 1 );
+								}
+								break;
+							case 0:
+							default:
+								for( i = 0; i < spawnCount; i++ ) {
+									r = Math.random() * 2 * Math.PI;
+									x = Math.sin(r) + xCorr;
+									y = Math.cos(r) + yCorr;
+									this.particles[this.particles.length] = new p(  this.x + x * (minXSpawnSpread + Math.random() * rndXSpawnSpread), 
+																					this.y + y * (minYSpawnSpread + Math.random() * rndYSpawnSpread), 
+																					x * (minXDirSpread + Math.random() * rndXDirSpread), 
+																					y * (minYDirSpread + Math.random() * rndYDirSpread), 
+																					0, 0,
+																					0,
+																					c, 
+																					minCook + Math.random() * rndCook, 
+																					minLifetime + Math.random() * rndLifetime, 
+																					this.subSpawns,
+																					this.currentSubSpawn + 1 );
+								}
+								break;
+						}
+					}
+					
+					//return;
+					// apply random rotation to fireworks
+					var angle = Math.random() * Math.PI/3 - Math.PI/6;
+					
+					var cs = Math.cos( angle );
+					var sn = Math.sin( angle );
+					var l = this.particles.length;
+					for( var i = 0; i < l; i++ )
+					{
+						var p1 = this.particles[ i ];
+						var px = p1.fx * cs - p1.fy * sn; 
+						var py = p1.fx * sn + p1.fy * cs;
+						p1.fx = px;
+						p1.fy = py;
+						
+						var x = p1.x - this.x;
+						var y = p1.y - this.y;
+						
+						px = x * cs - y * sn; 
+						py = x * sn + y * cs;
+						
+						p1.x = p1.ox = this.x + px;
+						p1.y = p1.oy = this.y + py;
+						
+					}
+					
+				}
+				
+				this.update = function(timeDiff, flightRand, fuseRand, airtimeRand )
+				{
+					if( this.cookTime > 0 ) {
+						this.cookTime -= timeDiff / 1000;
+						this.cookTime -= this.cookTimeAdjust * fuseRand;
+						if( this.cookTime < 0  ) {
+							if( this.lifeTime > 0 ) {
+								this.lifeTime -= this.cookTime;
+							}
+						}
+						else {
+							return true;
+						}
+					}
+						
+					if( this.state == 0 ) {
+						if( this.lifeTime > 0 ) {
+							this.lifeTime -= timeDiff / 1000;
+							this.lifeTime -= this.lifeTimeAdjust * airtimeRand;
+						}
+						
+						
+						if( isNaN( this.x ) || isNaN( this.y )) {
+							this.state = 1;
+						}
+						if( this.maxLifeTime <= 0 && this.y - this.oy > 1 ) { // falling down and no death in sight
+							this.state = 1;
+							this.subspawn();
+						}
+						else if( this.lifeTime <= 0 && this.maxLifeTime >= 0 ) { // died
+							this.state = 1;
+							this.subspawn();
+						}
+						else if( this.state == 0 ) {					
+							this.ox = this.x;
+							this.oy = this.y;
+							
+							this.fy += 9.7 * timeDiff / 1000;
+							this.fx += this.ax * timeDiff / 1000;
+							this.fy += this.ay * timeDiff / 1000;	
+							this.fx += this.bx * flightRand * timeDiff / 1000;
+							this.fy += this.by * flightRand * timeDiff / 1000;		
+							this.x += this.fx * timeDiff / 1000;
+							this.y += this.fy * timeDiff / 1000;
+							if( this.accTime > 0 ) {
+								this.accTime -= timeDiff / 1000;
+								if( this.accTime < 0 ) {
+									//this.fx += this.ax;
+									//this.fy += this.ay;
+								}
+							}
+						}
+					}		
+					else {
+						var l = this.particles.length;
+						var total = 0;
+						for( var i = 0; i < l; i++ )
+						{
+							total += this.particles[i].update( timeDiff, 0, 0, 0 ) ? 1 : 0;
+						}
+						if( total == 0 ) {
+							return false;
+						}
+					}			
+					return true;
+				}
+				
+				this.render = function(ctx )
+				{
+					if( this.cookTime > 0 ) {
+						return;
+					}
+					
+					if( this.c ) {
+						ctx.strokeStyle = this.currentSubSpawn == 0 ? 'rgb( 64, 64, 48 )' : this.c[0];
+						ctx.beginPath();
+					}
+					if( this.state == 0 ) {
+						ctx.moveTo( Math.floor(this.ox), Math.floor(this.oy) );
+						ctx.lineTo( Math.floor(this.x), Math.floor(this.y) );
+						if( this.c ) {
+							ctx.stroke();
+						}
+					}
+					else {
+						var l = this.particles.length;
+						for( var i = 0; i < l; i++ )
+						{
+							this.particles[i].render( ctx );
+						}
+						if( this.c ) {
+							ctx.stroke();
+						}
+					}
+					//console.log( this.ox, this.oy, this.x, this.y );
+				}
+			}
+			
+			function divisors( val )
+			{
+				var  i, res = [];
+			    for ( i = 1; i <= val/2; i++) {
+			        if (val % i == 0) {
+			            res[ res.length ] = i;
+			        }
+			    }
+			    return res;
+			}
+			
+			function adjustValue( val, type )
+			{
+				switch( type )
+				{
+					case 1: 
+						return Math.pow( val, 0.7 );
+					case 2:
+						return val * val;
+					case 0:
+					default:
+						return val;
+				}
+			}
+			
+			var spawnFan = function( spawnConfig, cnt, screenWidth, screenHeight )
+			{
+				var cnt123 = cnt;
+				
+				var maxSpeed = Math.sqrt( screenHeight )* ( 3 + Math.random() * 1.2 );
+				var minSpeed = Math.sqrt( screenHeight )* ( 3 );
+				var c = [
+					'hsl('+Math.floor( 0 + Math.random()*360 )+',100%,55%)', 
+					'hsl('+Math.floor( 0 + Math.random()*360 )+',100%,55%)'
+				];
+				
+				var divs = divisors( cnt );
+				var rows = divs[ Math.floor( Math.random() * divs.length ) ];
+				var spl = cnt > 2 && cnt % rows == 0;
+				var hlf = cnt / rows;
+				
+				var totalAngle = hlf <= 2 ? Math.PI / 3 : Math.PI / 2;
+				var startAngle = hlf == 1 ? 0 : -totalAngle / 2;
+				var anglePerP = hlf == 1 ? 0 : totalAngle / (hlf-1);
+				
+				startAngle -= Math.PI;
+				
+				var spreadType = Math.floor( Math.random() * 2 );
+				var maxUsed = screenHeight * 4 / 8;
+				var maxSpread =  Math.min( 1, rows / 4 ) * maxUsed * 3 / 4;
+				var maxOffset = ( maxUsed - maxSpread / 2 );
+				var maxHeight = screenHeight * 8/ 8 - Math.random() * maxOffset;
+				var minHeight = maxHeight - ( Math.random() / 2 + 0.5 )* maxSpread;
+								
+								
+				var explodeTime = 3 + Math.random()*1;
+				var delay = Math.floor( Math.random() * 4 );
+				var delayRow = ( delay == 1 && rows > 1 ? 3 / (rows-1) : 0 ) * (Math.floor(Math.random()*2)*2-1);
+				var delayCol = ( delay == 2 && hlf > 1 ? 3 / (hlf-1) : 0 ) * (Math.floor(Math.random()*2)*2-1);
+				var delayR0 = delayRow > 0 ? 0 : (rows-1) * Math.abs(delayRow);
+				var delayC0 = delayCol > 0 ? 0 : (hlf-1) * Math.abs(delayCol);
+				
+				var results = [];
+				var prevRow = -1;
+				for( var i = 0; i < cnt; i++ ) 
+				{
+					var row = Math.floor( i / hlf );
+					var rowPerc = row / ( rows <= 1 ? 1 : rows-1);
+					var rowHeight = minHeight + ( maxHeight - minHeight ) * rowPerc;
+					
+					var accelFactor = ((explodeTime-0) * ((explodeTime-0) + 1)) / 2;
+					var totalGravity = accelFactor * 9.7;
+					var dist = rowHeight - totalGravity;
+					var accelY = dist / explodeTime + 9.7 * ( explodeTime + 0.5);
+					
+					var col = i % hlf;
+					if( row > prevRow ) {
+						prevRow = row;		
+						var c = [					
+							'hsl('+Math.floor( 0 + Math.random()*360 )+',100%,55%)',
+							'hsl('+Math.floor( 0 + Math.random()*360 )+',100%,55%)'
+						];
+					}
+					
+					results[i] = new p( screenWidth/2, 
+										screenHeight + 1, 
+										Math.sin( startAngle + col * anglePerP ) * accelY, 
+										Math.cos( startAngle + col * anglePerP ) * accelY, 
+										0, 0,
+										0,
+										c, 
+										delayR0 + delayRow * row + delayC0 + delayCol * col,
+										explodeTime, 
+										spawnConfig );
+				}
+				if( cnt123 != results.length ) {
+				//	alert( 'fan failed :  ' + cnt123 + ' / ' + cnt + ' / ' + results.length );
+				}
+				return results;
+			}
+			
+			spawnFan.correctFireworksCount = function ( cnt )
+			{
+				return cnt;
+			}
+			
+			var spawnFan2 = function( spawnConfig, cnt, screenWidth, screenHeight )
+			{
+				var cnt123 = cnt;
+				
+				var maxSpeed = Math.sqrt( screenHeight )* ( 3 + Math.random() * 1.2 );
+				var minSpeed = Math.sqrt( screenHeight )* ( 3 );
+				var c = [
+					'hsl('+Math.floor( 0 + Math.random()*360 )+',100%,55%)', 
+					'hsl('+Math.floor( 0 + Math.random()*360 )+',100%,55%)'
+				];
+				
+				cnt /= 2;
+				
+				var divs = divisors( cnt );
+				var rows = divs[ Math.floor( Math.random() * divs.length ) ];
+				var spl = cnt > 2 && cnt % rows == 0;
+				var hlf = cnt / rows;
+				
+				var xPos = Math.random() * screenWidth/6;
+				
+				var totalAngle = Math.PI / 3;
+				var startAngle = hlf == 1 ? 0 : -totalAngle / 2;
+				var anglePerP = hlf == 1 ? 0 : totalAngle / (hlf-1);
+				
+				startAngle -= Math.PI;
+				
+				var spreadType = Math.floor( Math.random() * 2 );
+				var maxUsed = screenHeight * 4 / 8;
+				var maxSpread =  Math.min( 1, rows / 3 ) * maxUsed * 3 / 4;
+				var maxOffset = maxUsed - maxSpread;
+				var maxHeight = screenHeight * 8 / 8 - Math.random() * maxOffset;
+				var minHeight = maxHeight - ( Math.random() / 2 + 0.5 )* maxSpread;
+								
+								
+				var explodeTime = 3 + Math.random()*1;
+				var delay = Math.floor( Math.random() * 4 );
+				var delayRow = ( delay == 1 && rows > 1 ? 3 / (rows-1) : 0 ) * (Math.floor(Math.random()*2)*2-1);
+				var delayCol = ( delay == 2 && hlf > 1 ? 3 / (hlf-1) : 0 ) * (Math.floor(Math.random()*2)*2-1);
+				var delayR0 = delayRow > 0 ? 0 : (rows-1) * Math.abs(delayRow);
+				var delayC0 = delayCol > 0 ? 0 : (hlf-1) * Math.abs(delayCol);
+				
+				
+				var invertDelay = Math.random() >= 0.5;
+				var delayRow2 = invertDelay ? -delayRow : delayRow;
+				var delayCol2 = invertDelay ? -delayCol : delayCol;
+				var delayR02 = delayRow2 > 0 ? 0 : (rows-1) * Math.abs(delayRow2);
+				var delayC02 = delayCol2 > 0 ? 0 : (hlf-1) * Math.abs(delayCol2);
+				
+				var results = [];
+				var prevRow = -1;
+				for( var i = 0; i < cnt; i++ ) 
+				{
+					var row = Math.floor( i / hlf );
+					var rowPerc = row / ( rows <= 1 ? 1 : rows-1);
+					var rowHeight = minHeight + ( maxHeight - minHeight ) * rowPerc;
+					
+					var accelFactor = ((explodeTime-0) * ((explodeTime-0) + 1)) / 2;
+					var totalGravity = accelFactor * 9.7;
+					var dist = rowHeight - totalGravity;
+					var accelY = dist / explodeTime + 9.7 * ( explodeTime + 0.5);
+					
+					var col = i % hlf;
+					if( row > prevRow ) {
+						prevRow = row;	
+						var c = [					
+							'hsl('+Math.floor( 0 + Math.random()*360 )+',100%,55%)',
+							'hsl('+Math.floor( 0 + Math.random()*360 )+',100%,55%)'
+						];
+					}
+					
+					results[results.length] = new p( screenWidth/4+xPos, 
+													screenHeight + 1, 
+													Math.sin( startAngle + col * anglePerP ) * accelY, 
+													Math.cos( startAngle + col * anglePerP ) * accelY, 
+													0, 0,
+													0,
+													c, 
+													delayR02 + delayRow2 * row + delayC02 + delayCol2 * col,
+													explodeTime, 
+													spawnConfig );
+				}
+				var prevRow = -1;
+				for( var i = cnt; i < cnt+cnt; i++ ) 
+				{
+					var row = Math.floor( (i-cnt) / hlf );
+					var rowPerc = row / ( rows <= 1 ? 1 : rows-1);
+					var rowHeight = minHeight + ( maxHeight - minHeight ) * rowPerc;
+					
+					var accelFactor = ((explodeTime-0) * ((explodeTime-0) + 1)) / 2;
+					var totalGravity = accelFactor * 9.7;
+					var dist = rowHeight - totalGravity;
+					var accelY = dist / explodeTime + 9.7 * ( explodeTime + 0.5);
+					
+					var col = (i-cnt) % hlf;
+					if( row > prevRow ) {
+						prevRow = row;		
+						var c = [					
+							'hsl('+Math.floor( 0 + Math.random()*360 )+',100%,55%)',
+							'hsl('+Math.floor( 0 + Math.random()*360 )+',100%,55%)'
+						];
+					}
+					
+					results[results.length] = new p(    screenWidth*3/4-xPos, 
+														screenHeight + 1, 
+														Math.sin( startAngle + col * anglePerP ) * accelY, 
+														Math.cos( startAngle + col * anglePerP ) * accelY, 
+														0, 0,
+														0,
+														results[i-cnt].c, 
+														delayR0 + delayRow * row + delayC0 + delayCol * col,
+														explodeTime, 
+														spawnConfig );
+				}
+				if( cnt123 != results.length ) {
+				//	alert( 'fan 2 failed :  ' + cnt123 + ' / ' + cnt + ' / ' + results.length );
+				}
+				return results;
+			}
+			
+			spawnFan2.correctFireworksCount = function ( cnt )
+			{
+				return cnt % 2 == 1 ? cnt - 1 : cnt;
+			}
+			
+			var spawnColumns = function( spawnConfig, cnt, screenWidth, screenHeight )
+			{
+				var cnt123 = cnt;
+				
+				//console.warn( screenWidth, screenHeight );
+				var maxSpeed = Math.sqrt( screenHeight )* ( 3 + Math.random() * 1.2 );
+				var minSpeed = Math.sqrt( screenHeight )* ( 3 );
+				var c = [
+					'hsl('+Math.floor( 0 + Math.random()*360 )+',100%,55%)', 
+					'hsl('+Math.floor( 0 + Math.random()*360 )+',100%,55%)'
+				];
+				
+				var divs = divisors( cnt );
+				var rows = divs[ Math.floor( Math.random() * divs.length ) ];
+				var spl = cnt > 2 && cnt % rows == 0;
+				var hlf = cnt / rows;
+				var outerMargin = hlf == 1 ? screenWidth / 2 : screenWidth / (hlf+1);
+				var startX = hlf == 1 ? screenWidth / 2 : Math.random() * outerMargin * 0.75 + outerMargin * 0.25;
+				var wRemaining = screenWidth - startX * 2;
+				var xStep = hlf == 1 ? 0 : (wRemaining) / (hlf-1);
+				
+				var spreadType = Math.floor( Math.random() * 2 );
+				var maxUsed = screenHeight * 6 / 8;
+				var maxSpread =  Math.min( 1, rows / 3 ) * maxUsed * 3 / 4;
+				var maxOffset = maxUsed - maxSpread;
+				var maxHeight = screenHeight * 7 / 8 - Math.random() * maxOffset;
+				var minHeight = maxHeight - ( Math.random() / 2 + 0.5 )* maxSpread;
+				//if( rows <= 1 ) minHeight = screenHeight / 1.25;
+								
+				var explodeTime = 3 + Math.random()*1;
+				var delay = Math.floor( Math.random() * 4 );
+				var delayRow = ( delay == 1 && rows > 1 ? 3 / (rows-1) : 0 ) * (Math.floor(Math.random()*2)*2-1);
+				var delayCol = ( delay == 2 && hlf > 1 ? 3 / (hlf-1) : 0 ) * (Math.floor(Math.random()*2)*2-1);
+				var delayR0 = delayRow > 0 ? 0 : (rows-1) * Math.abs(delayRow);
+				var delayC0 = delayCol > 0 ? 0 : (hlf-1) * Math.abs(delayCol);
+				
+				
+				var results = [];
+				var prevRow = -1;
+				for( var i = 0; i < cnt; i++ ) 
+				{
+					var row = Math.floor( i / hlf );
+					var rowPerc = row / ( rows <= 1 ? 1 : rows-1);
+					var rowHeight = minHeight + ( maxHeight - minHeight ) * adjustValue( rowPerc, spreadType );
+					
+					var accelFactor = ((explodeTime-0) * ((explodeTime-0) + 1)) / 2;
+					var totalGravity = accelFactor * 9.7;
+					var dist = rowHeight - totalGravity;
+					var accelY = dist / explodeTime + 9.7 * ( explodeTime + 0.5);
+					
+					var col = i % hlf;
+					if( row > prevRow ) {
+						prevRow = row;		
+						var c = [					
+							'hsl('+Math.floor( 0 + Math.random()*360 )+',100%,55%)',
+							'hsl('+Math.floor( 0 + Math.random()*360 )+',100%,55%)'
+						];
+					}
+					results[i] = new p( startX + col * xStep, 
+										screenHeight + 1, 
+										0, 
+										-accelY, 
+										0, 
+										0,
+										0,
+										c, 
+										delayR0 + delayRow * row + delayC0 + delayCol * col, 
+										explodeTime, 
+										spawnConfig );
+				}
+				if( cnt123 != results.length ) {
+					//alert( 'columns failed' );
+				}
+				return results;
+			}
+			
+			spawnColumns.correctFireworksCount = function ( cnt )
+			{
+				return cnt;
+			}
+				
+			
+			var spawnWord = function( spawnConfig, cnt, screenWidth, screenHeight, line )
+			{
+				var cnt123 = cnt;
+				var words = line.toUpperCase();//'BEECHBUM IS A NOOB';
+				
+				var wordList = words.split(' ');
+				
+				var rows = wordList.length;
+				
+				//console.warn( screenWidth, screenHeight );
+				var maxSpeed = Math.sqrt( screenHeight )* ( 3 + Math.random() * 1.2 );
+				var minSpeed = Math.sqrt( screenHeight )* ( 3 );
+				var c = 'hsl('+Math.floor( 0 + Math.random()*360 )+',100%,55%)';
+				
+				var maxUsed = screenHeight * 6 / 8;
+				var maxSpread =  Math.min( 1, 1 / 3 ) * maxUsed * 3 / 4;
+				var maxOffset = maxUsed - maxSpread;
+				var maxHeight = screenHeight * 7 / 8 - Math.random() * maxOffset;
+				var minHeight = maxHeight - ( Math.random() / 2 + 0.5 )* maxSpread;
+				//if( rows <= 1 ) minHeight = screenHeight / 1.25;
+								
+				var explodeTime = 3;
+				
+				var results = [];
+				var prevRow = -1;
+				
+				for( var j = 0; j < rows; j++ )
+				{
+					var row = j;
+					var word = wordList[ j ];
+					
+					var xStep = 70;
+					var startX = screenWidth/2 - word.length * xStep/2;
+					for( var i = 0; i < word.length; i++ ) 
+					{
+						var chr = word.substr( i, 1 );
+						var spawnConfig2 = symbols[chr];
+						
+						var rowPerc = row / rows;
+						var rowHeight =  screenHeight - 100 - 70 * j;
+						
+						var accelFactor = ((explodeTime-0) * ((explodeTime-0) + 1)) / 2;
+						var totalGravity = accelFactor * 9.7;
+						var dist = rowHeight - totalGravity;
+						var accelY = dist / explodeTime + 9.7 * ( explodeTime + 0.5);
+						
+						var col = i;
+						results[results.length] = new p( startX + col * xStep, 
+														screenHeight + 1, 
+														0, 
+														-accelY, 
+														0, 
+														0,
+														0,
+														c, 
+														0, 
+														explodeTime, 
+														spawnConfig2 );
+					}
+				}
+				
+				if( words.length != results.length ) {
+					//alert( 'columns failed' );
+				}
+				return results;
+			}
+			
+			spawnWord.correctFireworksCount = function ( cnt )
+			{
+				return cnt;
+			}
+			
+			var specialMessages = {
+				'25-12': [
+					"Merry Christmas",
+					"Happy Holidays",
+				],
+				'26-12': [
+					"Merry Christmas",
+					"Happy Holidays",
+				],
+				'1-1': [
+					"Happy New Year!",
+					"Best Wishes For {year}",
+				]	
+			};
+			
+			var bdayMessages = [
+				"Happy Birthday",
+				"Congratulations",
+			]
+					
+			function myWallpaper() {
+				this.width = 0;
+				this.height = 0;
+				this.cx = 0;
+				this.cy = 0;
+				
+				this.particles = [];
+				this.deadParticles = [];
+				this.validSpawnSizes = [2,3,4,5,6,8,9,10,12];
+				this.nextSpawnSize = this.validSpawnSizes[ Math.floor( Math.random() * this.validSpawnSizes.length ) ];
+				this.nextSpawn = null;
+				this.nextSpawnConfig = null;
+				this.nextMessage = "";
+				this.configs = [
+					spawnConfigCombo,
+					//spawnConfigUp,
+					//spawnConfigCircle,
+					spawnConfigFlower,
+					spawnConfigFlower,
+					spawnConfigFlower2Color,
+					spawnConfigFlower2Color,
+					spawnConfigBlast,
+					spawnConfigCircle,
+					spawnConfigCircle,
+					spawnConfigCircle2Color,
+					spawnConfigRain,
+					spawnConfigRain2
+					
+				];
+				
+				this.spawns = [
+					spawnFan2,
+					spawnFan,
+					spawnColumns
+				];
+				
+				this.colorToggle = false;
+				
+				this.animationSpeed = 1.5;
+				this.flightRandomness = 0;
+				this.fuseRandomness = 0;
+				this.airtimeRandomness = 0;
+				this.fadeSpeed = 3;
+				this.fireworksCount = 100;
+				
+				this.showBirthdayMessages = false;
+				this.birthDay = 1;
+				this.birthMonth = 1;
+				this.birthDate = '1-1';
+				
+				this.customMessage1 = '';
+			};			
+			
+			myWallpaper.prototype = {
+				/**
+				 * init wallpaper
+				 **/
+				init: function( wp ) {
+					//console.log( 'init', wp.width, wp.height, wp );
+					var ctx = wp.context;
+					
+					this.resize( wp ); // resize (re)inits all rendering stuff
+					
+					this.setFireworksCount( this.fireworksCount );
+				},
+				
+				setFireworksCount: function( cnt )
+				{
+					this.fireworksCount = cnt;
+					if( this.nextSpawnSize > cnt ) {
+						this.nextSpawnSize = cnt;
+					}
+					
+					this.nextSpawn = this.spawns[ Math.floor( Math.random() * this.spawns.length ) ];
+					this.nextSpawnConfig = this.configs[ Math.floor( Math.random() * this.configs.length ) ];
+					cnt = this.nextSpawn.correctFireworksCount( cnt );
+					var res =  this.nextSpawn( this.nextSpawnConfig, cnt, this.width, this.height, "Have a great day!" );
+					
+					this.particles = [];
+					this.deadParticles = [];
+					for( var i = 0; i < this.fireworksCount; i++ )
+					{
+						this.particles[ i ] = res[ i ];
+					}	
+					
+					if( this.fireworksCount < 20 )
+					{
+						this.validSpawnSizes = [2,3,4,5];
+					}
+					else if( this.fireworksCount < 50 )
+					{
+						this.validSpawnSizes = [2,3,4,5,6,8];
+					}
+					else if( this.fireworksCount < 100 )
+					{
+						this.validSpawnSizes = [2,3,4,5,6,8,9,10,12,14,15];
+					}
+					else if( this.fireworksCount < 150 )
+					{
+						this.validSpawnSizes = [2,3,4,5,6,8,9,10,12,14,15,16,18,20,21,24,25];
+						//this.validSpawnSizes = [2,3,4,5,6,8,9,10,12,14,15,16,18,20,21,24,25,26,27,28,30,33,35,36,40,42,44,45,48,49,50];
+					}
+					else if( this.fireworksCount < 200 )
+					{
+						this.validSpawnSizes = [2,3,4,5,6,8,9,10,12,14,15,16,18,20,21,24,25,26,27,28,30];
+						//this.validSpawnSizes = [2,3,4,5,6,8,9,10,12,14,15,16,18,20,21,24,25,26,27,28,30,33,35,36,40,42,44,45,48,49,50];
+					}
+				},
+				/**
+				 * render frame 
+				 **/
+				render: function( wp, timeDiff, frameNr )
+				{
+					
+					var now = new Date();
+					var year = now.getFullYear();
+					var month = 1 + now.getMonth();
+					var dayOfMonth = now.getDate();
+					var messages = specialMessages[ dayOfMonth + '-' + month ];
+					if( this.showBirthdayMessages && dayOfMonth + '-' + month == this.birthDate ) {
+						if( !messages ) {
+							messages = bdayMessages;
+						}
+						else {
+							messages = messages.concat( bdayMessages )
+						}
+					}
+					if( this.customMessage1 ) {
+						if( !messages ) messages = [ this.customMessage1 ];
+						else messages = messages.concat( [ this.customMessage1 ] );
+					}
+					if( this.customMessage2 ) {
+						if( !messages ) messages = [ this.customMessage2 ];
+						else messages = messages.concat( [ this.customMessage2 ] );
+					}
+					if( this.customMessage3 ) {
+						if( !messages ) messages = [ this.customMessage3 ];
+						else messages = messages.concat( [ this.customMessage3 ] );
+					}
+					
+					timeDiff *= this.animationSpeed;
+					if( this.audioDataCount === 0 ) {
+						return;
+					}
+					var ctx = wp.context;
+					//ctx.globalCompositeOperation = 'destination-out';
+					//ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+					//ctx.globalCompositeOperation = 'destination-out';
+					//ctx.globalCompositeOperation = 'source-over';
+					//ctx.fillStyle = 'rgba( 255, 255, 255, 1 )';
+					//ctx.globalCompositeOperation = 'source-over';\
+					switch( this.fadeSpeed ) {
+						case 5: ctx.fillStyle = 'rgba(0,0,0,0.05)'; break;
+						case 3:ctx.fillStyle = 'rgba(0,0,0,0.2)'; break;
+						case 2:ctx.fillStyle = 'rgba(0,0,0,0.3)'; break;
+						case 1:ctx.fillStyle = 'rgba(0,0,0,0.5)'; break;
+						case 0:ctx.fillStyle = 'rgba(0,0,0,0.8)'; break;
+						
+						case 4: default: ctx.fillStyle = 'rgba(0,0,0,0.1)'; break;
+					}
+					//ctx.fillStyle = 'rgba(255, 255, 255, 0)';
+					ctx.fillRect(0, 0, this.width, this.height);	
+					//ctx.globalCompositeOperation = 'source-over';
+					//ctx.globalCompositeOperation = 'overlay';
+					
+					//console.log( this.maxAverageHistory.length + ' ' + this.maxAverage );
+					ctx.lineWidth = 1;
+					
+					/*
+					ctx.beginPath();
+					ctx.moveTo( 0, this.height / 4 );
+					ctx.lineTo( this.width, this.height / 4 );
+					ctx.moveTo( 0, this.height / 2 );
+					ctx.lineTo( this.width, this.height / 2 );
+					ctx.moveTo( 0, this.height * 3 / 4 );
+					ctx.lineTo( this.width, this.height * 3 / 4 );
+					ctx.stroke();
+					*/
+					
+					//ctx.beginPath();
+					var l = this.particles.length;
+					var maxSpeed = this.height / 10;
+					var alive = 0;
+					for( var i = 0; i < l; i++ )
+					{
+						if( typeof this.particles[i] === 'undefined' 
+								|| typeof this.particles[i].update === 'undefined' 
+								|| !this.particles[i].update( timeDiff, this.flightRandomness, this.fuseRandomness, this.airtimeRandomness ) ) {
+							if( this.deadParticles.indexOf( i ) === -1 ) {
+								this.deadParticles[ this.deadParticles.length ] = i;
+							}
+							//var c = 'hsl('+Math.floor( 0 + Math.random()*360 )+',100%,55%)';
+							//this.particles[i] =  new p( Math.random()*this.width, this.height + 1, 0, -40 - ( Math.random() * maxSpeed ), c, 0, -1, this.configs[ Math.floor( Math.random() * this.configs.length ) ] );
+							if( this.deadParticles.length == this.nextSpawnSize)
+							{
+								// new spawn
+								this.colorToggle = !this.colorToggle;
+								//this.nextSpawn = this.spawns[ Math.floor( Math.random() * this.spawns.length ) ];
+								//this.nextSpawnConfig = this.configs[ Math.floor( Math.random() * this.configs.length ) ];
+								this.nextSpawnSize = this.nextSpawn.correctFireworksCount( this.nextSpawnSize );
+								
+								//if( this.colorToggle ) cfg = cfg.slice(0).reverse();
+								var res = this.nextSpawn( this.nextSpawnConfig, this.nextSpawnSize, this.width, this.height, this.nextMessage );
+								for( var k = 0; k < this.nextSpawnSize; k++ )
+								{
+									this.particles[ this.deadParticles[k] ] = res[ k ];
+								}
+					
+								alive += this.nextSpawnSize;
+								
+								this.nextSpawnSize = this.validSpawnSizes[ Math.floor( Math.random() * this.validSpawnSizes.length ) ];		
+								this.nextSpawn = this.spawns[ Math.floor( Math.random() * this.spawns.length ) ];
+								this.nextSpawnConfig = this.configs[ Math.floor( Math.random() * this.configs.length ) ];
+								this.nextSpawnSize = this.nextSpawn.correctFireworksCount( this.nextSpawnSize );
+								
+								if( typeof messages !== 'undefined' ) {										
+									if( Math.random() >= 0.99 ) {
+										this.nextMessage = messages[ Math.floor( Math.random() * messages.length )];
+										this.nextMessage = this.nextMessage.replace( '{year}', year );
+										this.nextSpawn = spawnWord;
+										this.nextSpawnSize = Math.min( this.fireworksCount, this.nextMessage.length * 2 );
+									}
+								}
+								this.deadParticles = [];
+							}
+						}
+						else {
+							alive++;
+							this.particles[i].render( ctx );
+						}
+					}
+						//console.log( alive, this.deadParticles.length, alive + this.deadParticles.length );
+					
+					//console.log( this.deadParticles)
+					//ctx.stroke();
+				},
+				
+				/**
+				 * render area resized.. re-init everything that needs it
+				 **/
+				resize: function( wp ) 
+				{
+					var ctx = wp.context;
+					
+					this.width = wp.width;
+					this.height = wp.height;
+					
+					this.cx = this.width/2;
+					this.cy = this.height/2;
+					
+					//ctx.globalCompositeOperation = 'source-over';
+					ctx.fillStyle = 'rgb(255,255,255)';
+					ctx.fillRect(0, 0, wp.width, wp.height);	
+					//ctx.globalCompositeOperation = 'source-over';
+					
+					
+				},
+				updateAudioData: function( wp, data )
+				{
+				},
+				applyGeneralProperties: function(wp, properties)
+				{
+				},
+				applyUserProperties: function( wp, properties )
+				{
+					if( properties.fadeSpeed ) 
+					{
+						this.fadeSpeed = Math.max( 0, Math.min( 5, properties.fadeSpeed.value ) );
+						wp.context.fillStyle = 'rgb(40,40,40)';
+						wp.context.fillRect(0, 0, wp.width, wp.height);	
+					}
+					if( properties.animationSpeed ) 
+					{
+						this.animationSpeed = Math.max( 50, Math.min( 450, properties.animationSpeed.value ) ) / 100;
+					}
+					if( properties.randFlight ) {
+						this.flightRandomness = Math.max( 0, Math.min( 100, properties.randFlight.value ) ) / 100;
+					}
+					if( properties.randFuse ) {
+						this.fuseRandomness = Math.max( 0, Math.min( 100, properties.randFuse.value ) ) / 100;
+					}
+					if( properties.randAirtime ) {
+						this.airtimeRandomness = Math.max( 0, Math.min( 100, properties.randAirtime.value ) ) / 100;
+					}
+					if( properties.fireworksCount ) {
+						this.setFireworksCount( Math.max( 20, Math.min( 200, properties.fireworksCount.value ) ) );						
+					}
+					if( properties.particeCount ) 
+					{
+						particleCountFactor = Math.max( 50, Math.min( 250, properties.particeCount.value ) ) / 100;
+					}
+					
+					if( properties.showBirthdayMessages ) 
+					{
+						this.showBirthdayMessages = properties.showBirthdayMessages.value ? true : false;
+					}
+					if( properties.birthDay ) 
+					{
+						this.birthDay = Math.max( 1, Math.min( 31, properties.birthDay.value ) ) ;
+						this.birthDate = this.birthDay + '-' + this.birthMonth;
+					}
+					if( properties.birthMonth ) 
+					{
+						this.birthMonth = Math.max( 1, Math.min( 12, properties.birthMonth.value ) ) ;
+						this.birthDate = this.birthDay + '-' + this.birthMonth;
+					}
+					
+					if( properties.customMessage1 ) {
+						this.customMessage1 = properties.customMessage1.value.trim();
+					}
+					
+					if( properties.customMessage2 ) {
+						this.customMessage2 = properties.customMessage2.value.trim();
+					}
+					
+					if( properties.customMessage3 ) {
+						this.customMessage3 = properties.customMessage3.value.trim();
+					}
+				}
+			};
+		</script>
+			
+		<script type="text/javascript">
+			var wp;
+			var wpw;
+			var startWp =  function() {
+				wp = new myWallpaper();
+
+				wpw = new wallpaper({
+									hideFps: true,
+									hideTimer: true,
+									hideLog: true,
+									targetFrameRate: 30,
+									canvasScaling: 1
+								},
+								function(sender) {wp.init(sender);},
+								function(sender, timeDiff, frameCount) {wp.render(sender, timeDiff, frameCount);},
+								function(sender) {wp.resize(sender);},
+								function(sender, properties) {wp.applyGeneralProperties(sender, properties);},
+								function(sender, properties) {wp.applyUserProperties(sender, properties);},
+								function(sender, data) {wp.updateAudioData(sender, data);});
+				// load project settings
+				//loadProjectJson();
+			};
+			
+			startWp();
+			
+		</script>
+	</body>
+</html>
